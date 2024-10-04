@@ -1,0 +1,7 @@
+{
+  "dbuser": "root",
+  "dbpwd": "MYSQLzjh688",
+  "dbname": "myhelp",
+  "dbhost": "localhost",
+  "jwtSecret": "ZwUOcsoTJ4UWUGPG0i7t"
+}

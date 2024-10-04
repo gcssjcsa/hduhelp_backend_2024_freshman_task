@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {{ $op := . }}
+    <title>{{ $op }}问题</title>
+    <script src="../src/js/question.js"></script>
+</head>
+<body>
+    <label for="title">标题：</label>
+    <div>
+        <input type="text" name="title" id="title">
+    </div>
+    <label for="content">正文：</label>
+    <div>
+        <textarea name="content" id="content" cols="30" rows="10"></textarea>
+    </div>
+    <div>
+        <label for="permission">可见范围：</label>
+        <select name="permission" id="permission">
+            <option value=2>Guest</option>
+            <option value=1>Student</option>
+        </select>
+    </div>
+    <div>
+        {{ if eq $op "发布" }}
+            <button onclick="sendQuestion()">发布</button>
+        {{ else }}
+            <button onclick="modifyQuestion()">修改</button>
+            <button>删除</button>
+            <script src="../src/js/question.js">getQuestionTitleAndContent()</script>
+        {{ end }}
+    </div>
+</body>
+</html>
