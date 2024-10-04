@@ -128,7 +128,7 @@ func GetProfile(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in", "redirect": "/login", "prompt": "请先登录"})
 		return
 	} else {
-		user.Id = int(c.Keys["id"].(float64))
+		user.Id = c.Keys["id"].(int)
 		err := db.SelectUserProfileById(&user)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -140,7 +140,7 @@ func GetProfile(c *gin.Context) {
 
 func UpdateProfile(c *gin.Context) {
 	var newUserInfo, existedUser models.User
-	newUserInfo.Id = int(c.Keys["id"].(float64))
+	newUserInfo.Id = c.Keys["id"].(int)
 
 	if err := c.ShouldBindJSON(&newUserInfo); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -202,7 +202,7 @@ func UpdatePassword(c *gin.Context) {
 
 	originalPwd := Data["originalPwd"].(string)
 	newPwd := Data["newPwd"].(string)
-	id := int(c.Keys["id"].(float64))
+	id := c.Keys["id"].(int)
 
 	if password, err := db.SelectUserPassword(id); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
@@ -226,10 +226,10 @@ func UpdatePassword(c *gin.Context) {
 }
 
 func Delete(c *gin.Context) {
-	id := int(c.Keys["id"].(float64))
+	id := c.Keys["id"].(int)
 	err := db.DeleteUser(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 

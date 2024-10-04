@@ -16,6 +16,10 @@ func main() {
 	r.Static("/src", "./static")
 	r.LoadHTMLGlob("templates/*")
 
+	r.GET("/", func(c *gin.Context) {
+		c.HTML(http.StatusOK, "index.html", nil)
+	})
+
 	frontend := r.Group("/")
 	{
 		frontend.GET("/index", func(c *gin.Context) {
@@ -35,6 +39,10 @@ func main() {
 		})
 		frontend.GET("/question/post", user.AuthMiddleware(), GetPostQuestionHTML)
 		frontend.GET("/question/:qid/modify", user.AuthMiddleware(), GetModifyQuestionHTML)
+
+		frontend.GET("/404", func(c *gin.Context) {
+			c.HTML(http.StatusOK, "404.html", nil)
+		})
 	}
 
 	// 注册账户
@@ -55,7 +63,8 @@ func main() {
 		apiRoute.Use(user.AuthMiddleware())
 
 		// 问题内容
-		apiRoute.GET("/question", question.GetList)
+		apiRoute.GET("/question/pblist", question.GetPublicQuesionList)
+		apiRoute.GET("/question/pvlist", question.GetPrivateQuesionList)
 		apiRoute.POST("/question", question.Create)
 		apiRoute.GET("/question/:qid", question.Get)
 		apiRoute.PUT("/question/:qid", question.Modify)

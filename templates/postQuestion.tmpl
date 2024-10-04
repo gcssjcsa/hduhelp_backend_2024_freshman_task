@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{ $op := . }}
     <title>{{ $op }}问题</title>
-    <script src="../src/js/question.js"></script>
+    <script src="../../src/js/question.js"></script>
 </head>
 <body>
     <label for="title">标题：</label>
@@ -25,11 +25,11 @@
     </div>
     <div>
         {{ if eq $op "发布" }}
-            <button onclick="sendQuestion()">发布</button>
+        <button onclick="sendQuestion()">发布</button>
         {{ else }}
-            <button onclick="modifyQuestion()">修改</button>
-            <button>删除</button>
-            <script src="../src/js/question.js">getQuestionTitleAndContent()</script>
+        <button onclick="modifyQuestion()">修改</button>
+        <button onclick="deleteQuestion()">删除</button>
+        <script>getQuestionTitleAndContent()</script>
         {{ end }}
     </div>
 </body>

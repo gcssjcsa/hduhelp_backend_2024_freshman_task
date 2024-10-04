@@ -36,9 +36,10 @@ func AuthMiddleware() gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 			var user models.User
-			c.Set("id", claims["id"])
-			c.Set("role", claims["role"])
 			user.Id = int(claims["id"].(float64))
+			user.Role = models.Role(claims["role"].(float64))
+			c.Set("id", user.Id)
+			c.Set("role", user.Role)
 			err := db.SelectUserProfileById(&user)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
