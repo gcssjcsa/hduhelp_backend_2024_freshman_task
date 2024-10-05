@@ -1,11 +1,11 @@
 function getQuestionUrl() {
     const path = window.location.pathname;
     const segments = path.split('/');
-    const id = segments[2];
-    if (!/^\d+$/.test(id)) {
+    const qid = segments[2];
+    if (!/^\d+$/.test(qid)) {
         return '';
     }
-    return window.location.origin + '/api/question/' + id;
+    return window.location.origin + '/api/question/' + qid;
 }
 
 async function sendQuestion() {
@@ -18,47 +18,41 @@ async function sendQuestion() {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({'title': title, 'content': content, 'permission': permission}),
-    })
+    });
 
     const data = await response.json();
     console.log(data);
 }
 
-function getQuestionTitleAndContent() {
-    let path = window.location.pathname;
-    let segments = path.split('/');
-    const id = segments[2];
-    if (!/^\d+$/.test(id)) {
-        window.location.href = '/404';
-        return;
-    }
-    const url = window.location.origin + '/api/question/' + id;
-
-    fetch(url, {method : 'GET'})
-        .then((response) => {
-            return response.json().then((data) => {
-                if (!response.ok) {
-                    alert(data['error']);
-                    window.history.back()
-                    return Promise.reject('Failed to fetch');
-                }
-            return data;
-            });
-        })
-        .then((data) => {
-            document.getElementById('title').value = data['title'];
-            document.getElementById('content').value = data['content'];
-            document.getElementById('permission').value = data['permission'];
-        })
-        // .catch((error) => console.error('Error:', error));
-}
-
-async function modifyQuestion() {
+async function getQuestion() {
     const url = getQuestionUrl();
     if (!url) {
         window.location.href = '/404';
         return;
     }
+
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        if (!response.ok) {
+            alert(data['error']);
+            window.history.back();
+            return Promise.reject('Failed to fetch');
+        }
+        return data;
+    } catch (error) {
+        console.error('Error fetching question:', error);
+    }
+}
+
+async function modifyQuestion() {
+    const path = window.location.pathname;
+    const segments = path.split('/');
+    const qid = segments[2];
+    if (!/^\d+$/.test(qid)) {
+        return '';
+    }
+    const url = window.location.origin + '/api/question/' + qid;
 
     const title = document.getElementById('title').value;
     const content = document.getElementById('content').value;
@@ -68,8 +62,8 @@ async function modifyQuestion() {
     const response = await fetch(url, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({"id": parseInt(id), "title": title, 'content': content, 'permission': permission}),
-    })
+        body: JSON.stringify({"id": parseInt(qid), "title": title, 'content': content, 'permission': permission}),
+    });
     const data = await response.json();
     if(!response.ok) {
         alert(data['error']);
@@ -87,7 +81,7 @@ async function deleteQuestion() {
 
     const response = await fetch(url, {
         method: 'DELETE',
-    })
+    });
     const data = await response.json();
     console.log(data);
 }

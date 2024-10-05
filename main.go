@@ -2,7 +2,6 @@ package main
 
 import (
 	"MyHelp/api/answer"
-	"MyHelp/api/comment"
 	"MyHelp/api/question"
 	"MyHelp/api/user"
 	"MyHelp/db"
@@ -39,6 +38,8 @@ func main() {
 		})
 		frontend.GET("/question/post", user.AuthMiddleware(), GetPostQuestionHTML)
 		frontend.GET("/question/:qid/modify", user.AuthMiddleware(), GetModifyQuestionHTML)
+		frontend.GET("/question/:qid/answer/post", user.AuthMiddleware(), GetPostAnswerHTML)
+		frontend.GET("/question/:qid/answer/:aid/modify", user.AuthMiddleware(), GetModifyAnswerHTML)
 
 		frontend.GET("/404", func(c *gin.Context) {
 			c.HTML(http.StatusOK, "404.html", nil)
@@ -64,7 +65,7 @@ func main() {
 
 		// 问题内容
 		apiRoute.GET("/question/pblist", question.GetPublicQuesionList)
-		apiRoute.GET("/question/pvlist", question.GetPrivateQuesionList)
+		apiRoute.GET("/question/pvlist", question.GetMyQuesionList)
 		apiRoute.POST("/question", question.Create)
 		apiRoute.GET("/question/:qid", question.Get)
 		apiRoute.PUT("/question/:qid", question.Modify)
@@ -72,16 +73,10 @@ func main() {
 
 		// 问题回答
 		apiRoute.GET("/question/:qid/answer", answer.GetList)
-		apiRoute.POST("/question/:qid/answer/", answer.Create)
+		apiRoute.POST("/question/:qid/answer", answer.Create)
 		apiRoute.GET("/question/:qid/answer/:aid", answer.Get)
 		apiRoute.PUT("/question/:qid/answer/:aid", answer.Modify)
 		apiRoute.DELETE("/question/:qid/answer/:aid", answer.Delete)
-
-		// 回答评论
-		apiRoute.GET("/comment", comment.Get)
-		apiRoute.POST("/comment", comment.Send)
-		apiRoute.PUT("/comment", comment.Modify)
-		apiRoute.DELETE("/comment", comment.Delete)
 	}
 
 	err := r.Run()

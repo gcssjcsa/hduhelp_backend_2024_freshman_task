@@ -42,17 +42,20 @@ type Question struct {
 	PostDate   string `json:"post_date"`
 	ModifyDate string `json:"modify_date"`
 	Likes      int    `json:"likes"`
-	IsBest     bool   `json:"is_best"`
 }
 
 type Answer struct {
-	id         int
-	Owner      string
-	Permission Role
-	Content    string
-	Comments   []int
-	Like       int
-	Dislike    int
+	Id         int    `json:"id"`
+	Author     string `json:"author"`
+	Permission int    `json:"permission"`
+	AuthorId   int    `json:"author_id"`
+	QuestionId int    `json:"question_id"`
+	Content    string `json:"content"`
+	PostDate   string `json:"post_date"`
+	ModifyDate string `json:"modify_date"`
+	Likes      int    `json:"like"`
+	Dislikes   int    `json:"dislike"`
+	IsBest     bool   `json:"is_best"`
 }
 
 func init() {

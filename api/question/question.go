@@ -12,11 +12,31 @@ import (
 )
 
 func GetPublicQuesionList(c *gin.Context) {
+	// TODO: 根据likes降序排序，或根据回复时间排序（
+	var questions []*models.Question
 	role := c.Keys["role"].(models.Role)
 
+	err := db.GetPublicQuestionListByRole(int(role), &questions)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, questions)
 }
 
-func GetPrivateQuesionList(c *gin.Context) {}
+func GetMyQuesionList(c *gin.Context) {
+	var questions []*models.Question
+	id := c.Keys["id"].(int)
+
+	err := db.GetMyQuestionListById(id, &questions)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, questions)
+}
 
 func Get(c *gin.Context) {
 	var question models.Question
@@ -40,7 +60,13 @@ func Get(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to view this question"})
 		return
 	}
-	c.JSON(http.StatusOK, question)
+
+	role := c.Keys["role"].(models.Role)
+	if role == models.Guest {
+		c.JSON(http.StatusOK, gin.H{"question": question, "userRole": int(role)})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"question": question, "userId": c.Keys["id"].(int), "userRole": int(role)})
 }
 
 func Create(c *gin.Context) {
@@ -117,7 +143,7 @@ func Delete(c *gin.Context) {
 	} else if errors.Is(err, sql.ErrNoRows) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "question not found"})
 		return
-	} else if question.AuthorId != c.Keys["id"].(int) {
+	} else if question.AuthorId != c.Keys["id"].(int) && c.Keys["role"].(models.Role) != models.Admin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this question"})
 		return
 	}

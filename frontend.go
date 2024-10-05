@@ -15,7 +15,7 @@ func GetPostQuestionHTML(c *gin.Context) {
 		c.Redirect(http.StatusFound, "/login")
 		return
 	}
-	c.HTML(http.StatusOK, "postQuestion.tmpl", "发布")
+	c.HTML(http.StatusOK, "questionModification.tmpl", "发布")
 }
 
 func GetModifyQuestionHTML(c *gin.Context) {
@@ -38,5 +38,36 @@ func GetModifyQuestionHTML(c *gin.Context) {
 		return
 	}
 
-	c.HTML(http.StatusOK, "postQuestion.tmpl", "修改")
+	c.HTML(http.StatusOK, "questionModification.tmpl", "修改")
+}
+
+func GetPostAnswerHTML(c *gin.Context) {
+	if c.Keys["role"] == models.Guest {
+		c.Redirect(http.StatusFound, "/login")
+		return
+	}
+	c.HTML(http.StatusOK, "answerModification.tmpl", "发布")
+}
+
+func GetModifyAnswerHTML(c *gin.Context) {
+	var a models.Answer
+	aid, err := strconv.Atoi(c.Param("aid"))
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
+		return
+	}
+
+	err = db.GetAnswerById(aid, &a)
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		return
+	} else if errors.Is(err, sql.ErrNoRows) {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Answer not found"})
+		return
+	} else if c.Keys["id"].(int) != a.AuthorId {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You are not author"})
+		return
+	}
+
+	c.HTML(http.StatusOK, "answerModification.tmpl", "修改")
 }

@@ -2,12 +2,137 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MyHelp首页</title>
+    <style>
+        a {
+            text-decoration-line: none;
+            color: inherit;
+        }
+
+        a:active, a:focus {
+            color: inherit;
+        }
+
+        .title {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .info {
+            font-size: 0.6em;
+            color: gray;
+        }
+    </style>
 </head>
 <body>
-    <div><a href="/login">登录</a></div>
-    <div><a href="/register">注册</a></div>
-    <div><a href="/user">个人首页</a></div>
-    <div><a href="/question/post">发布问题</a></div>
+    <div class="nav">
+        <span class="title">MyHelp</span>&nbsp;
+        <a href="/login"><button id="login">登录</button></a>
+        <a href="/register"><button id="register">注册</button></a>
+        <a href="/user"><button id="profile" hidden>个人首页</button></a>
+    </div>
+    <br>
+    <div><a href="/question/post"><button>发布问题</button></a></div>
+    <br>
+    <div id="questions"><span class="title">问题列表：</span><br>--------------------------------<br></div>
+    <br>
+    <div id="my-questions" hidden><span class="title">我发布的问题：</span><br>--------------------------------<br></div>
+    <script>
+        fetch('/user', {method: 'POST'})
+                .then(response => response.json())
+                .then(data => {loadLoginUserData(data);})
+                .catch(error => console.error(error));
+
+        fetch('/api/question/pblist')
+                .then(response => response.json())
+                .then(pbQuestion => {displayPublicQuestion(pbQuestion);})
+                .catch(error => console.error(error));
+
+        function loadLoginUserData(data) {
+            if (data['role'] !== 2) {
+                document.getElementById('login').hidden = true;
+                document.getElementById('register').hidden = true;
+                document.getElementById('profile').hidden = false;
+
+                fetch('/api/question/pvlist')
+                        .then(response => response.json())
+                        .then(myQuestion => {displayMyQuestion(myQuestion);})
+                        .catch(error => console.error(error));
+            }
+        }
+
+        function displayPublicQuestion(data) {
+            const container = document.getElementById('questions');
+            data.forEach(item => {
+                const div = document.createElement('div');
+
+                const a = document.createElement('a');
+                a.href = `question/${item['id']}`;
+
+                const p_title = document.createElement('p');
+                p_title.innerText = `${item['title']} --By ${item['author']}`;
+                p_title.className = 'title';
+                a.appendChild(p_title);
+                div.appendChild(a);
+
+                const p_content = document.createElement('p');
+                p_content.innerText = item['content'];
+                p_content.className = 'content';
+                div.appendChild(p_content);
+
+                const p_date = document.createElement('p');
+                p_date.innerText = item['post_date'];
+                p_date.className = 'info';
+                div.appendChild(p_date);
+
+                const span = document.createElement('span');
+                span.innerText = '----------------';
+                div.appendChild(span);
+
+                container.appendChild(div);
+            })
+        }
+
+        function displayMyQuestion(data) {
+            const container = document.getElementById('my-questions');
+            container.hidden = false;
+            if (data) {
+                data.forEach(item => {
+                    const div = document.createElement('div');
+
+                    const a = document.createElement('a');
+                    a.href = `question/${item['id']}`;
+
+                    const p_title = document.createElement('p');
+                    p_title.innerText = `${item['title']}`;
+                    p_title.className = 'title';
+                    a.appendChild(p_title);
+                    div.appendChild(a);
+
+                    const p_content = document.createElement('p');
+                    p_content.innerText = item['content'];
+                    p_content.className = 'content';
+                    div.appendChild(p_content);
+
+                    const p_date = document.createElement('p');
+                    p_date.innerText = item['post_date'];
+                    p_date.className = 'info';
+                    div.appendChild(p_date);
+
+                    const span = document.createElement('span');
+                    span.innerText = '----------------';
+                    div.appendChild(span);
+
+                    container.appendChild(div);
+                })
+            } else {
+                const container = document.getElementById('my-questions')
+                const p = document.createElement('p');
+                p.innerText = '人非生而知之者，孰能无惑？';
+                container.appendChild(p);
+            }
+        }
+    </script>
 </body>
 </html>

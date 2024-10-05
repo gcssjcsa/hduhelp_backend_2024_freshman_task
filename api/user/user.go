@@ -124,8 +124,9 @@ func Logout(c *gin.Context) {
 
 func GetProfile(c *gin.Context) {
 	var user models.User
-	if c.Keys["role"] == models.Guest {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in", "redirect": "/login", "prompt": "请先登录"})
+	role := c.Keys["role"].(models.Role)
+	if role == models.Guest {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in", "role": int(role)})
 		return
 	} else {
 		user.Id = c.Keys["id"].(int)

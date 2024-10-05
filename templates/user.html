@@ -1,51 +1,58 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <title>个人中心</title>
-  <script src="src/js/user.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>个人中心</title>
+    <style>
+        .title {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+    </style>
+    <script src="/src/js/user.js"></script>
 </head>
 <body>
-  <p>个人中心</p>
-  <form action="" method="post">
+    <p class="title">个人中心</p>
+    <form action="" method="post">
+        <div>
+            <label for="username">用户名:</label>
+            <input type="text" name="username" id="username" required>
+        </div>
+        <div>
+            <label for="email">邮箱：</label>
+              <input type="email" name="email" id="email" required>
+        </div>
+        <div>
+            <label for="role">分类：</label>
+            <input type="text" name="role" id="role" disabled>
+        </div>
+        <div>
+            <button type="button" onclick="updateProfile()">更新信息</button>
+        </div>
+    </form>
+    <br>
     <div>
-      <label for="username">用户名:</label>
-      <input type="text" name="username" id="username" required>
+        <label for="originalPwd">原密码：</label>
+        <input type="password" name="originalPwd" id="originalPwd">
     </div>
     <div>
-      <label for="email">邮箱：</label>
-      <input type="email" name="email" id="email" required>
+        <label for="newPwd">新的密码：</label>
+        <input type="password" name="newPwd" id="newPwd">
     </div>
     <div>
-      <label for="role">分类：</label>
-      <input type="text" name="role" id="role" disabled>
+        <button onclick="changePassword()">提交</button>
     </div>
+    <br>
     <div>
-      <button type="button" onclick="updateProfile()">更新信息</button>
+        <button onclick="logout()">退出登录</button>
     </div>
-  </form>
-  <br>
-  <div>
-    <label for="originalPwd">原密码：</label>
-    <input type="password" name="originalPwd" id="originalPwd">
-  </div>
-  <div>
-    <label for="newPwd">新的密码：</label>
-    <input type="password" name="newPwd" id="newPwd">
-  </div>
-  <div>
-    <button onclick="changePassword()">提交</button>
-  </div>
-  <br>
-  <div>
-    <button onclick="logout()">退出登录</button>
-  </div>
-  <br>
-  <div>
-    <button onclick="deleteUser()">注销账户</button>
-  </div>
-  <script>
-    getProfile();
-  </script>
+    <br>
+    <div>
+        <button onclick="deleteUser()">注销账户</button>
+    </div>
+    <script>
+        getProfile();
+    </script>
 </body>
 </html>

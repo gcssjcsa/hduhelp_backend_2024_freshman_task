@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     {{ $op := . }}
     <title>{{ $op }}问题</title>
-    <script src="../../src/js/question.js"></script>
+    <script src="/src/js/question.js"></script>
 </head>
 <body>
     <label for="title">标题：</label>
@@ -29,7 +29,18 @@
         {{ else }}
         <button onclick="modifyQuestion()">修改</button>
         <button onclick="deleteQuestion()">删除</button>
-        <script>getQuestionTitleAndContent()</script>
+        <script>
+            async function loadQuestion() {
+                const data = await getQuestion();
+                if (data) {
+                    const question = data['question'];
+                    document.getElementById("title").value = question['title'];
+                    document.getElementById("content").value = question['content'];
+                    document.getElementById('permission').value = question['permission'];
+                }
+            }
+            loadQuestion()
+        </script>
         {{ end }}
     </div>
 </body>

@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>加载中...</title>
+    <style>
+        .title {
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .info {
+            font-size: 0.6em;
+            color: gray;
+        }
+    </style>
+    <script src="/src/js/question.js"></script>
+</head>
+<body>
+    <br>
+    <div>
+        <span class="title" id="title">Title</span>&nbsp;&nbsp;
+        <a id="modifyQuestion" hidden><button>修改问题</button></a>
+    </div>
+    <br>
+    <div class="info">
+        <span>作者：<span class="author" id="author"></span>&nbsp;</span>
+        <span>发布日期：<span class="postDate" id="postDate"></span>&nbsp;</span>
+        <span id="modify" hidden>修改日期：<span class="modifyDate" id="modifyDate"></span></span>
+    </div>
+    <div><p class="content" id="content">content</p></div>
+    <div><a><button id="likes">点赞：</button></a></div>
+
+    <br>
+    <div id="replyList"><span>回复：</span><br>--------------------------------<br></div>
+    <div><a id="postReply"><button>回复</button></a></div>
+    <script>
+        async function loadQuestion() {
+            const data = await getQuestion();
+            if (data) {
+                const question = data['question'];
+
+                document.title = question['title']
+                document.getElementById("title").innerText = question['title'];
+                document.getElementById("content").innerText = question['content'];
+                document.getElementById('likes').innerText = '点赞：' + question['likes'];
+                document.getElementById('author').innerText = question['author'];
+                document.getElementById('postDate').innerText = question['post_date'];
+                document.getElementById('modifyDate').innerText = question['modify_date'];
+
+                if(data['userRole'] !== 2 && data['userId'] === question['author_id']) {
+                    document.getElementById('modifyQuestion').hidden = false;
+                    document.getElementById('modifyQuestion').href = `/question/${question['id']}/modify`
+                }
+                if (question['post_date'] !== question['modify_date']) {
+                    document.getElementById('modify').hidden = false;
+                }
+            }
+        }
+
+        function loadReplyData(data) {
+            const id = data["userId"];
+            const answer = data["answer"];
+            const container = document.getElementById('replyList');
+            if (answer) {
+                answer.forEach(reply => {
+                    const div = document.createElement('div');
+
+                    const p_author = document.createElement('p');
+                    const span_author = document.createElement('span');
+                    span_author.innerText = `${reply['author']}: ` ;
+                    p_author.appendChild(span_author);
+
+                    if (reply['author_id'] === id) {
+                        const a = document.createElement('a');
+                        a.href = `${window.location.pathname}/answer/${reply['id']}/modify`;
+                        const button_modify = document.createElement('button');
+                        button_modify.innerText = '修改回答';
+                        a.appendChild(button_modify);
+                        p_author.appendChild(a);
+                    }
+                    div.appendChild(p_author);
+
+                    const p_content = document.createElement('p');
+                    p_content.innerText = reply['content'];
+                    div.appendChild(p_content);
+
+                    const p_date = document.createElement('p');
+                    p_date.className = 'info';
+                    if (reply['post_date'] === reply['modify_date']) {
+                        p_date.innerText = `${reply['post_date']}`;
+                    } else {
+                        p_date.innerText = `${reply['post_date']} 于${reply['modify_date']} 修改`;
+                    }
+                    div.appendChild(p_date);
+
+                    const div_button = document.createElement('div');
+                    const button_likes = document.createElement('button');
+                    button_likes.innerText = `赞：${reply['like']}`;
+                    div_button.appendChild(button_likes);
+
+                    const button_dislikes = document.createElement('button');
+                    button_dislikes.innerText = `踩：${reply['dislike']}`;
+                    div_button.appendChild(button_dislikes);
+                    div.appendChild(div_button);
+
+                    const p = document.createElement('p');
+                    p.innerText = '----------------';
+                    div.appendChild(p);
+
+                    container.appendChild(div);
+                })
+            } else {
+                const container = document.getElementById('replyList')
+                const p = document.createElement('p');
+                p.innerText = '别让楼主寂寞太久';
+                container.appendChild(p);
+            }
+        }
+
+        loadQuestion();
+        document.getElementById('postReply').href = `${window.location.pathname}/answer/post`;
+
+        fetch(`/api${window.location.pathname}/answer`)
+                .then(response => response.json())
+                .then(data => {loadReplyData(data);})
+                .catch(error => console.log(error));
+    </script>
+</body>
+</html>
