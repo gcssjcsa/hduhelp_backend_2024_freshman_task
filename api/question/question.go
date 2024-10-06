@@ -13,7 +13,15 @@ import (
 
 func GetPublicQuesionList(c *gin.Context) {
 	var questions []*models.Question
-	role := c.Keys["role"].(models.Role)
+	var role models.Role
+	getRole, ok := c.Get("role") // 不使用c.Keys
+	if !ok {
+		role = models.Guest
+	}
+	role, ok = getRole.(models.Role)
+	if !ok {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+	}
 
 	err := db.GetPublicQuestionListByRole(int(role), &questions)
 	if err != nil {
@@ -131,7 +139,7 @@ func Modify(c *gin.Context) {
 	now := time.Now()
 	question.ModifyDate = now.Format("2006-01-02 15:04:05")
 
-	err = db.UpdateQuestionById(question.Id, &question)
+	err = db.UpdateQuestionById(question.Id, &question) // TODO：应当把回答的权限一并更改
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 	}
