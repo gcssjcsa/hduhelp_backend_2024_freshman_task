@@ -62,7 +62,7 @@ async function modifyQuestion() {
     const response = await fetch(url, {
         method: 'PUT',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({"id": parseInt(qid), "title": title, 'content': content, 'permission': permission}),
+        body: JSON.stringify({"id": parseInt(qid), "title": title, "content": content, "permission": permission}),
     });
     const data = await response.json();
     if(!response.ok) {

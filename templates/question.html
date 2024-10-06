@@ -126,6 +126,13 @@
                 .then(response => response.json())
                 .then(data => {loadReplyData(data);})
                 .catch(error => console.log(error));
+
+        window.addEventListener('pageshow', function(event) {
+            if (event.persisted || window.performance && window.performance.navigation.type === 2) {
+                // 如果是通过浏览器的后退功能返回的页面，则刷新
+                window.location.reload();
+            }
+        });
     </script>
 </body>
 </html>

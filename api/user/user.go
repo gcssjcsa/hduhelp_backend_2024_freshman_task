@@ -18,35 +18,35 @@ import (
 func Register(c *gin.Context) {
 	var user, existedUser models.User
 	if err := c.ShouldBindJSON(&user); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 
 	if user.Username == "" || user.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username or password is empty"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username or password is empty"})
 		return
 	}
 
 	if utf8.RuneCountInString(user.Username) > 63 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username is too long"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is too long"})
 	}
 	if utf8.RuneCountInString(user.Email) > 63 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "email is too long"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is too long"})
 	}
 
 	matched, err := regexp.Match("^[A-Za-z0-9]+@[A-Za-z0-9]+\\.[A-Za-z0-9]+$", []byte(user.Email))
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
 	if !matched {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "email is invalid"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is invalid"})
 		return
 	}
 
 	err = db.GetLoginUserInfoByName(user.Username, &existedUser)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	} else if !errors.Is(err, sql.ErrNoRows) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "User already exists"})
@@ -64,18 +64,18 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"Status": "Register sucessfully!"})
+	c.JSON(http.StatusOK, gin.H{"status": "Register sucessfully!"})
 }
 
 func Login(c *gin.Context) {
 	var user, loginUser models.User
 	if err := c.ShouldBindJSON(&loginUser); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	if loginUser.Username == "" || loginUser.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username or password is empty"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username or password is empty"})
 		return
 	}
 
@@ -114,37 +114,42 @@ func Login(c *gin.Context) {
 	}
 
 	c.SetCookie("token", tokenString, 3600*24*7, "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"Status": "Login sucessfully!", "token": tokenString})
+	c.JSON(http.StatusOK, gin.H{"status": "Login sucessfully!"})
 }
 
 func Logout(c *gin.Context) {
 	c.SetCookie("token", "", -1, "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"Status": "Logout sucessfully!"})
+	c.JSON(http.StatusOK, gin.H{"status": "Logout sucessfully!"})
 }
 
 func GetProfile(c *gin.Context) {
-	var user models.User
 	role := c.Keys["role"].(models.Role)
 	if role == models.Guest {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in", "role": int(role)})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in", "role": role})
 		return
-	} else {
-		user.Id = c.Keys["id"].(int)
-		err := db.SelectUserProfileById(&user)
-		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"id": user.Id, "username": user.Username, "role": user.Role, "email": user.Email})
 	}
+
+	var user models.User
+	user.Id = c.Keys["id"].(int)
+	err := db.SelectUserProfileById(&user)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"id": user.Id, "username": user.Username, "role": user.Role, "email": user.Email})
 }
 
 func UpdateProfile(c *gin.Context) {
+	if c.Keys["role"].(models.Role) == models.Guest {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in"})
+		return
+	}
+
 	var newUserInfo, existedUser models.User
 	newUserInfo.Id = c.Keys["id"].(int)
 
 	if err := c.ShouldBindJSON(&newUserInfo); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -154,10 +159,10 @@ func UpdateProfile(c *gin.Context) {
 	}
 
 	if utf8.RuneCountInString(newUserInfo.Username) > 63 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "username is too long"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Username is too long"})
 	}
 	if utf8.RuneCountInString(newUserInfo.Email) > 63 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "email is too long"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is too long"})
 	}
 
 	matched, err := regexp.Match("^[A-Za-z0-9]+@[A-Za-z0-9]+\\.[A-Za-z0-9]+$", []byte(newUserInfo.Email))
@@ -166,7 +171,7 @@ func UpdateProfile(c *gin.Context) {
 		return
 	}
 	if !matched {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "email is invalid"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email is invalid"})
 		return
 	}
 
@@ -184,16 +189,20 @@ func UpdateProfile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"Status": "Update sucessfully!"})
+	c.JSON(http.StatusOK, gin.H{"status": "Update sucessfully!"})
 }
 
 func UpdatePassword(c *gin.Context) {
+	if c.Keys["role"].(models.Role) == models.Guest {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in"})
+		return
+	}
+
 	rawData, err := c.GetRawData()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
-
 	var Data map[string]interface{}
 	err = json.Unmarshal(rawData, &Data)
 	if err != nil {
@@ -222,18 +231,23 @@ func UpdatePassword(c *gin.Context) {
 
 		// 清除登录状态
 		c.SetCookie("token", "", -1, "/", "", false, true)
-		c.JSON(http.StatusOK, gin.H{"Status": "Change password sucessfully!"})
+		c.JSON(http.StatusOK, gin.H{"status": "Change password sucessfully!"})
 	}
 }
 
 func Delete(c *gin.Context) {
+	if c.Keys["role"].(models.Role) == models.Guest {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in"})
+		return
+	}
+
 	id := c.Keys["id"].(int)
 	err := db.DeleteUser(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	c.SetCookie("token", "", -1, "/", "", false, true)
-	c.JSON(http.StatusOK, gin.H{"Status": "Delete sucessfully! Bye!"}) // 重定向由前端完成
+	c.JSON(http.StatusOK, gin.H{"status": "Delete sucessfully! Bye!"})
 }

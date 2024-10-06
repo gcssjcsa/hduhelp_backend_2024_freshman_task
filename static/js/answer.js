@@ -39,7 +39,7 @@ async function sendAnswer() {
         window.location.href = '/404';
         return;
     }
-    const url = `${window.location.origin}/api/question/${qid}/answer`;
+    const url = `/api/question/${qid}/answer`;
 
     const content = document.getElementById('content').value;
 
@@ -50,13 +50,17 @@ async function sendAnswer() {
     })
 
     const data = await response.json();
-    console.log(data);
+    if (response.ok) {
+        window.history.back();
+    } else {
+        alert(response["error"]);
+    }
 }
 
 function getAnswerContent() {
     const ids = getIds();
     if (ids) {
-        const url = `${window.location.origin}/api/question/${ids.qid}/answer/${ids.aid}`;
+        const url = `/api/question/${ids.qid}/answer/${ids.aid}`;
 
         fetch(url, {method: 'GET'})
             .then((response) => {
@@ -79,7 +83,7 @@ function getAnswerContent() {
 async function modifyAnswer() {
     const ids = getIds();
     if (ids) {
-        const url = `${window.location.origin}/api/question/${ids.qid}/answer/${ids.aid}`;
+        const url = `/api/question/${ids.qid}/answer/${ids.aid}`;
         const content = document.getElementById('content').value;
 
         const response = await fetch(url, {
@@ -91,7 +95,7 @@ async function modifyAnswer() {
         if (!response.ok) {
             alert(data['error']);
         } else {
-            console.log(data);
+            window.history.back();
         }
     }
 }
@@ -99,7 +103,7 @@ async function modifyAnswer() {
 async function deleteAnswer() {
     const ids = getIds();
     if (ids) {
-        const url = `${window.location.origin}/api/question/${ids.qid}/answer/${ids.aid}`;
+        const url = `/api/question/${ids.qid}/answer/${ids.aid}`;
 
         const response = await fetch(url, {
             method: 'DELETE',

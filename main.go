@@ -51,7 +51,7 @@ func main() {
 	// 登录账户
 	r.POST("/login", user.Login)
 	// 退出账户
-	r.DELETE("/login", user.Logout)
+	r.POST("/logout", user.Logout)
 	// 更新、删除用户信息
 	r.POST("/user", user.AuthMiddleware(), user.GetProfile)
 	r.PUT("/user", user.AuthMiddleware(), user.UpdateProfile)

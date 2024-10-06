@@ -41,7 +41,6 @@ async function getProfile() {
 
     const response = await fetch("/user", {
         method: 'POST',
-        headers: {'Content-Type': 'application/json'},
     });
     const data = await response.json()
     console.log(data);
@@ -91,8 +90,8 @@ async function changePassword() {
 }
 
 async function logout() {
-    const response = await fetch("/login", {
-        method: 'DELETE',
+    const response = await fetch("/logout", {
+        method: 'POST',
     })
 
     const data = await response.json();

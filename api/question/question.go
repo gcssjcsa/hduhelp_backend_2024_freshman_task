@@ -12,13 +12,12 @@ import (
 )
 
 func GetPublicQuesionList(c *gin.Context) {
-	// TODO: 根据likes降序排序，或根据回复时间排序（
 	var questions []*models.Question
 	role := c.Keys["role"].(models.Role)
 
 	err := db.GetPublicQuestionListByRole(int(role), &questions)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -31,7 +30,7 @@ func GetMyQuesionList(c *gin.Context) {
 
 	err := db.GetMyQuestionListById(id, &questions)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, err.Error())
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
@@ -42,17 +41,17 @@ func Get(c *gin.Context) {
 	var question models.Question
 	qid, err := strconv.Atoi(c.Param("qid"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Id must be integer"})
 		return
 	}
 
 	err = db.GetQuestionById(qid, &question)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 	if errors.Is(err, sql.ErrNoRows) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "question not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return
 	}
 
@@ -70,14 +69,19 @@ func Get(c *gin.Context) {
 }
 
 func Create(c *gin.Context) {
+	if c.Keys["role"].(models.Role) == models.Guest {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in"})
+		return
+	}
+
 	var question models.Question
 	if err := c.ShouldBindJSON(&question); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 
 	if question.Title == "" || question.Content == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Title or Content is empty"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Title or content is empty"})
 		return
 	}
 	postDate := time.Now()
@@ -91,29 +95,35 @@ func Create(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"data": question})
+	c.JSON(http.StatusOK, gin.H{"status": "Create question successfully"})
 }
 
 func Modify(c *gin.Context) {
+	role := c.Keys["role"].(models.Role)
+	if role == models.Guest {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in"})
+		return
+	}
+
 	var question, originalQuestion models.Question
 	if err := c.ShouldBindJSON(&question); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
 	if question.Title == "" || question.Content == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Title or Content is empty"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Title or content is empty"})
 		return
 	}
 
 	originalQuestion.Id = question.Id
 	err := db.GetQuestionById(question.Id, &originalQuestion)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if errors.Is(err, sql.ErrNoRows) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "question not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return
-	} else if c.Keys["id"].(int) != originalQuestion.AuthorId {
+	} else if c.Keys["id"].(int) != originalQuestion.AuthorId && role != models.Admin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to modify this question"})
 		return
 	}
@@ -125,23 +135,28 @@ func Modify(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
 	}
-	c.JSON(http.StatusOK, gin.H{"Status": "Update question successfully"})
+	c.JSON(http.StatusOK, gin.H{"status": "Update question successfully"})
 }
 
 func Delete(c *gin.Context) {
+	if c.Keys["role"].(models.Role) == models.Guest {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "You haven't logged in"})
+		return
+	}
+
 	var question models.Question
 	qid, err := strconv.Atoi(c.Param("qid"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "id must be integer"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Id must be integer"})
 		return
 	}
 
 	err = db.GetQuestionById(qid, &question)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	} else if errors.Is(err, sql.ErrNoRows) {
-		c.JSON(http.StatusNotFound, gin.H{"error": "question not found"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Question not found"})
 		return
 	} else if question.AuthorId != c.Keys["id"].(int) && c.Keys["role"].(models.Role) != models.Admin {
 		c.JSON(http.StatusForbidden, gin.H{"error": "You do not have permission to delete this question"})
@@ -150,8 +165,8 @@ func Delete(c *gin.Context) {
 
 	err = db.DeleteQuestionById(qid)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal Server Error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Internal server error"})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"Status": "Delete question successfully"})
+	c.JSON(http.StatusOK, gin.H{"status": "Delete question successfully"})
 }
